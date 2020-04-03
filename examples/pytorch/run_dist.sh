@@ -1,0 +1,1 @@
+mpirun --mca oob_tcp_if_include eno1 --mca btl_tcp_if_include eno1  -np 4 -H proj54:2,proj55:2 -bind-to none -map-by slot -x NCCL_SOCKET_IFNAME=eno1 -x NCCL_DEBUG=INFO -x LD_LIBRARY_PATH -x PATH -mca pml ob1 -mca btl ^openib python pytorch_horovod_benchmark.py --num-iters 200
