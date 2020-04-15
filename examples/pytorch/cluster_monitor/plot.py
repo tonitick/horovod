@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 import json
 import os.path
 from pandas import concat
@@ -171,14 +169,9 @@ class Painter:
             return
         with open(self.conf.in_files[0]) as cur_f:
             self.columns = cur_f.readline().strip()[1:].split('\t')
-            print("self.columns")
-            print(self.columns)
         for in_file in self.conf.in_files:
             # load data
             data = read_csv(in_file, sep="\t", comment='#', names=self.columns)
-            print("data all")
-            print(type(data))
-            print(data)
             # prepare data
             if self.conf.mode is not "io":
                 calculate_percent_util(data, self.conf)
@@ -188,9 +181,6 @@ class Painter:
             if self.conf.plot_average is not 1:
                 self.plot(data[self.conf.skip_header:last_point].groupby(arange(len(data))//self.conf.plot_average).mean()[self.plot_conf["columns"]], output_file)
             else:
-                print("data columns")
-                print(type(data[self.conf.skip_header:last_point][self.plot_conf["columns"]]))
-                print(data[self.conf.skip_header:last_point][self.plot_conf["columns"]])
                 self.plot(data[self.conf.skip_header:last_point][self.plot_conf["columns"]], output_file)
 
     def plot_average(self):

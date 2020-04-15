@@ -42,7 +42,7 @@ def collect_logs(worker_host, worker_path, collect_path):
     sys.stdout.write("Collected logs from %s.\n" % worker_host)
 
 def start_on_worker(worker_host, worker_path, is_stop, interval = 1):
-    check_existing_collectl_cmd = 'ssh %s "cat collectl.pid 2> /dev/null"' % (worker_host)
+    check_existing_collectl_cmd = 'ssh %s "cat collectl.pid 2>/dev/null"' % (worker_host)
     existing_pid = os.popen(check_existing_collectl_cmd).read().strip()
 
     if is_stop:
@@ -51,7 +51,7 @@ def start_on_worker(worker_host, worker_path, is_stop, interval = 1):
             return
 
         # Stop collectl
-        os.system('ssh %s "kill %s && rm collectl.pid"' % (worker_host, existing_pid))
+        os.system('ssh %s "kill -9 %s && rm collectl.pid"' % (worker_host, existing_pid))
 
         sys.stdout.write("Collectl on %s stopped.\n" % worker_host)
     else:
@@ -88,7 +88,7 @@ if __name__ == '__main__':
     f = open(args.workers)
     lines = f.readlines()
     f.close()
-    worker_hosts = set([worker_host.strip()for worker_host in lines])
+    worker_hosts = set([worker_host.strip() for worker_host in lines])
 
     # Start
     if args.start:
