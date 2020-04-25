@@ -51,7 +51,7 @@ def start_on_worker(worker_host, worker_path, is_stop, interval = 1):
             return
 
         # Stop collectl
-        os.system('ssh %s "kill -9 %s && rm collectl.pid"' % (worker_host, existing_pid))
+        os.system('ssh %s "kill %s && rm collectl.pid"' % (worker_host, existing_pid))
 
         sys.stdout.write("Collectl on %s stopped.\n" % worker_host)
     else:

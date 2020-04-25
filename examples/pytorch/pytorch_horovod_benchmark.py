@@ -144,7 +144,8 @@ log('Number of %ss: %d' % (device, hvd.size()))
 
 # Warm-up
 log('Running warmup...')
-timeit.timeit(benchmark_step, number=args.num_warmup_batches)
+time = timeit.timeit(benchmark_step, number=args.num_warmup_batches)
+log('Warmup time: %.1fs' % (time))
 
 # Benchmark
 log('Running benchmark...')
@@ -166,4 +167,3 @@ img_sec_conf = 1.96 * np.std(img_secs)
 log('Img/sec per %s: %.1f +-%.1f' % (device, img_sec_mean, img_sec_conf))
 log('Total img/sec on %d %s(s): %.1f +-%.1f' %
     (hvd.size(), device, hvd.size() * img_sec_mean, hvd.size() * img_sec_conf))
-
