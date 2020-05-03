@@ -6,7 +6,6 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torch.utils.data.distributed
 from torchvision import models
-import horovod.torch as hvd
 import timeit
 import numpy as np
 import os
@@ -18,9 +17,6 @@ from datetime import datetime
 # Benchmark settings
 parser = argparse.ArgumentParser(description='PyTorch Synthetic Benchmark',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--fp16-allreduce', action='store_true', default=False,
-                    help='use fp16 compression during allreduce')
-
 parser.add_argument('--model', type=str, default='resnet50',
                     help='model to benchmark')
 parser.add_argument('--batch-size', type=int, default=32,
@@ -46,12 +42,6 @@ parser.add_argument('--partition', type=int, default=None,
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
-hvd.init()
-
-if args.cuda:
-    # Horovod: pin GPU to local rank.
-    torch.cuda.set_device(hvd.local_rank())
-
 cudnn.benchmark = True
 
 # Set up standard model.
@@ -63,22 +53,9 @@ if args.cuda:
 
 optimizer = optim.SGD(model.parameters(), lr=0.01)
 
-# Horovod: (optional) compression algorithm.
-# compression = hvd.Compression.fp16 if args.fp16_allreduce else hvd.Compression.none
-compression = hvd.Compression.none
-
-# Horovod: wrap optimizer with DistributedOptimizer.
-optimizer = hvd.DistributedOptimizer(optimizer,
-                                     named_parameters=model.named_parameters(),
-                                     compression=compression)
-
-# Horovod: broadcast parameters & optimizer state.
-hvd.broadcast_parameters(model.state_dict(), root_rank=0)
-hvd.broadcast_optimizer_state(optimizer, root_rank=0)
-
-# Set up fake data
 dataset = []
 targetset = []
+# Set up fake data
 # for _ in range(100):
 #     data = torch.rand(args.batch_size, 3, 224, 224)
 #     target = torch.LongTensor(args.batch_size).random_() % 1000
@@ -88,7 +65,6 @@ targetset = []
 #         target = target.cuda()
 #     dataset.append(data)
 data_index = 0
-
 
 transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
@@ -123,17 +99,13 @@ def benchmark_step():
     # print(loss) # convergence check
     optimizer.step()
 
-
 def log(s, nl=True):
-    if hvd.rank() != 0:
-        return
     print(s, end='\n' if nl else '')
 
 
 log('Model: %s' % args.model)
 log('Batch size: %d' % args.batch_size)
 device = 'GPU' if args.cuda else 'CPU'
-log('Number of %ss: %d' % (device, hvd.size()))
 
 # Warm-up
 log('Running warmup...')
@@ -144,20 +116,14 @@ log('Warmup end timestamp: %s' % (datetime.now().strftime("%s")))
 # Benchmark
 log('Running benchmark...')
 img_secs = []
-# enable_profiling = args.profiler & (hvd.rank() == 0)
 
 for x in range(args.num_iters):
     time = timeit.timeit(benchmark_step, number=args.num_batches_per_iter)
     img_sec = args.batch_size * args.num_batches_per_iter / time
     log('Iter #%d: %.2f img/sec per %s' % (x, img_sec, device))
     img_secs.append(img_sec)
-# if enable_profiling:
-#     prof.export_chrome_trace(os.path.join('pytorch-trace', args.model+'-'+str(hvd.rank()) +'.json'))
-#     print(prof)
 
 # Results
 img_sec_mean = np.mean(img_secs)
 img_sec_conf = 1.96 * np.std(img_secs)
 log('Img/sec per %s: %.2f +-%.2f' % (device, img_sec_mean, img_sec_conf))
-log('Total img/sec on %d %s(s): %.2f +-%.2f' %
-    (hvd.size(), device, hvd.size() * img_sec_mean, hvd.size() * img_sec_conf))
