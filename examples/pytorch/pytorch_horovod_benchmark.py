@@ -151,9 +151,6 @@ for x in range(args.num_iters):
     img_sec = args.batch_size * args.num_batches_per_iter / time
     log('Iter #%d: %.2f img/sec per %s' % (x, img_sec, device))
     img_secs.append(img_sec)
-# if enable_profiling:
-#     prof.export_chrome_trace(os.path.join('pytorch-trace', args.model+'-'+str(hvd.rank()) +'.json'))
-#     print(prof)
 
 # Results
 img_sec_mean = np.mean(img_secs)
