@@ -828,11 +828,12 @@ void PerformOperation(TensorTable& tensor_table, MPIResponse response) {
     for (auto it = waiting_tensors.begin(); it != waiting_tensors.end();) {
       auto ready = true;
       // If bytescheduler is enabled, ready is also true for rank 0.
-      if (!horovod_global.use_bytescheduler) LOG(WARNING) << "rank " << horovod_global.rank << "use_bytescheduler = " << horovod_global.use_bytescheduler;
+      // if (!horovod_global.use_bytescheduler) LOG(WARNING) << "rank " << horovod_global.rank << " use_bytescheduler = " << horovod_global.use_bytescheduler;
       if (horovod_global.rank != 0 || !horovod_global.use_bytescheduler) {
-        auto r = false;
-        r = it->ready_event->Ready();
-        if (!r) LOG(WARNING) << "Ready: " << r;
+        // auto r = false;
+        // r = it->ready_event->Ready();
+        ready = it->ready_event->Ready();
+        // if (!r) LOG(WARNING) << "Ready: " << r;
       }
       if (ready) {
         timeline.ActivityEnd(it->tensor_name);
