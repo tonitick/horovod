@@ -433,6 +433,8 @@ def synchronize(handle):
     """
     if handle not in _handle_map:
         return
+    print("hvd ops {}: start horovod_torch_wait_and_clear".format(local_rank()))
     mpi_lib.horovod_torch_wait_and_clear(handle)
+    print("hvd ops {}: end horovod_torch_wait_and_clear".format(local_rank()))
     _, output = _handle_map.pop(handle)
     return output

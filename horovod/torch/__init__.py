@@ -226,7 +226,9 @@ def broadcast_parameters(params, root_rank):
 
     # Wait for completion.
     for handle in handles:
+        print("hvd optimizer {}: start sync".format(local_rank()))
         synchronize(handle)
+        print("hvd optimizer {}: end sync".format(local_rank()))
 
 
 def broadcast_optimizer_state(optimizer, root_rank):
