@@ -152,9 +152,6 @@ struct HorovodGlobalState {
   // Flag indicating whether to mark cycles in the timeline.
   bool mark_cycles_in_timeline = false;
 
-  // Flag indicating whether to use ByteScheduler.
-  bool use_bytescheduler = false;
-
   ParameterManager param_manager;
 
   // Encapsulates the fusion buffers, handles resizing and auto-tuning of buffer
@@ -826,12 +823,7 @@ void PerformOperation(TensorTable& tensor_table, MPIResponse response) {
   }
   while (!waiting_tensors.empty()) {
     for (auto it = waiting_tensors.begin(); it != waiting_tensors.end();) {
-      auto ready = true;
-      // If bytescheduler is enabled, ready is also true for rank 0.
-      if (horovod_global.rank != 0 || !horovod_global.use_bytescheduler) {
-        it->ready_event->Ready();
-      }
-      if (ready) {
+      if (it->ready_event->Ready()) {
         timeline.ActivityEnd(it->tensor_name);
         timeline.ActivityStart(it->tensor_name, WAIT_FOR_OTHER_TENSOR_DATA);
         it = waiting_tensors.erase(it);
@@ -1840,13 +1832,6 @@ void BackgroundThreadLoop(HorovodGlobalState& state) {
   if (horovod_timeline_mark_cycles != nullptr &&
       std::strtol(horovod_timeline_mark_cycles, nullptr, 10) > 0) {
     state.mark_cycles_in_timeline = true;
-  }
-
-  // Override use_bytescheduler flag
-  auto use_bytescheduler = std::getenv("USE_BYTESCHEDULER");
-  if (use_bytescheduler != nullptr &&
-      std::strtol(use_bytescheduler, nullptr, 10) > 0) {
-    state.use_bytescheduler = true;
   }
 
   // Override Tensor Fusion threshold, if it's set.

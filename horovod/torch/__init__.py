@@ -38,6 +38,7 @@ from horovod.torch.mpi_ops import mpi_threads_supported
 import torch
 import collections
 
+import sys
 
 class _DistributedOptimizer(torch.optim.Optimizer):
     def __init__(self, params, named_parameters, compression,
@@ -227,8 +228,10 @@ def broadcast_parameters(params, root_rank):
     # Wait for completion.
     for handle in handles:
         print("hvd optimizer {}: start sync".format(local_rank()))
+        sys.stdout.flush();
         synchronize(handle)
         print("hvd optimizer {}: end sync".format(local_rank()))
+        sys.stdout.flush();
 
 
 def broadcast_optimizer_state(optimizer, root_rank):

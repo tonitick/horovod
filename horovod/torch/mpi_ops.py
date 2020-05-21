@@ -22,6 +22,8 @@ from distutils.version import LooseVersion
 # Load all the necessary PyTorch C types.
 import torch
 
+import sys
+
 # PyTorch v2 API starts with 1.0.0 (including nightly builds)
 _v2_api = LooseVersion(torch.__version__) >= LooseVersion('1.0.0')
 if _v2_api:
@@ -434,7 +436,9 @@ def synchronize(handle):
     if handle not in _handle_map:
         return
     print("hvd ops {}: start horovod_torch_wait_and_clear".format(local_rank()))
+    sys.stdout.flush()
     mpi_lib.horovod_torch_wait_and_clear(handle)
     print("hvd ops {}: end horovod_torch_wait_and_clear".format(local_rank()))
+    sys.stdout.flush()
     _, output = _handle_map.pop(handle)
     return output
