@@ -391,9 +391,11 @@ extern "C" int horovod_torch_poll(int handle) {
 }
 
 extern "C" void horovod_torch_wait_and_clear(int handle) {
+  printf("horovod_torch_wait_and_clear %d start", horovod_rank());
   while (!handle_manager.PollHandle(handle)) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
+  printf("horovod_torch_wait_and_clear %d end", horovod_rank());
   auto status = handle_manager.ReleaseHandle(handle);
   ThrowIfError(*status);
 }
