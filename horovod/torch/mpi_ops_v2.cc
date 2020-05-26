@@ -226,11 +226,13 @@ int DoBroadcastCudaOnCPU(::torch::Tensor tensor, ::torch::Tensor output, int roo
 int PollHandle(int handle) { return handle_manager.PollHandle(handle) ? 1 : 0; }
 
 void WaitAndClear(int handle) {
-  LOG(WARNING) << "-----------------------------------------------------------------C_LIB: horovod_torch_wait_and_clear " << horovod_rank() << "start.";
+  // LOG(ERROR) << "-----------------------------------------------------------------C_LIB: horovod_torch_wait_and_clear " << horovod_rank() << "start.";
+  printf("-----------------------------------------------------------------C_LIB: horovod_torch_wait_and_clear %d start.\n", horovod_rank());
   while (!handle_manager.PollHandle(handle)) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
-  LOG(WARNING) << "-----------------------------------------------------------------C_LIB: horovod_torch_wait_and_clear " << horovod_rank() << "stop.";
+  // LOG(ERROR) << "-----------------------------------------------------------------C_LIB: horovod_torch_wait_and_clear " << horovod_rank() << "stop.";
+  printf("-----------------------------------------------------------------C_LIB: horovod_torch_wait_and_clear %d stop.\n", horovod_rank());
   auto status = handle_manager.ReleaseHandle(handle);
   ThrowIfError(*status);
 }
